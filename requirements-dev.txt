@@ -1,0 +1,2 @@
+# Test tools (not needed in production)
+pytest>=8.3

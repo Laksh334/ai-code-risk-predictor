@@ -1,0 +1,6 @@
+# Repositories used to build the training dataset (one per line, # = comment).
+# Python projects with several years of active history.
+https://github.com/psf/requests
+https://github.com/pallets/flask
+https://github.com/pallets/click
+https://github.com/encode/httpx

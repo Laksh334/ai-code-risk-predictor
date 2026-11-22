@@ -1,0 +1,43 @@
+# Render Blueprint: Dashboard -> New -> Blueprint -> pick this repo.
+# Creates the API (Docker) + a PostgreSQL database and wires DATABASE_URL automatically.
+# Plan names/prices change - check render.com/pricing before applying.
+services:
+  - type: web
+    name: code-risk-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # PyTorch + the emotion model need ~1.5-2 GB RAM. On a 512 MB plan set RISK_USE_HF=0.
+    plan: standard
+    healthCheckPath: /api/health
+    disk:                      # persistent clones/caches (needs a paid plan)
+      name: risk-data
+      mountPath: /data
+      sizeGB: 10
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: code-risk-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true    # Render creates a random value
+      - key: ENVIRONMENT
+        value: production
+      - key: RISK_USE_HF
+        value: "1"
+      - key: CORS_ORIGINS      # your frontend URL, e.g. https://code-risk.onrender.com
+        sync: false
+      - key: DASHBOARD_URL
+        sync: false
+      - key: GITHUB_WEBHOOK_SECRET
+        sync: false
+      - key: GITHUB_APP_ID
+        sync: false
+      - key: GITHUB_PRIVATE_KEY
+        sync: false
+
+databases:
+  - name: code-risk-db
+    databaseName: risk_predictor
+    user: risk
+    plan: basic-256mb

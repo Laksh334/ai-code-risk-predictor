@@ -1,0 +1,12 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+*.db
+# Generated data (clones, caches, datasets) - but keep the small production model, which the
+# Docker image / cloud build needs.
+data/*
+!data/models/
+data/models/*
+!data/models/production.joblib

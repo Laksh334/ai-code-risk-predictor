@@ -1,0 +1,43 @@
+# Local production-like setup: API + PostgreSQL.
+#   copy .env.example to .env, fill in SECRET_KEY, then:
+#   docker compose up --build        ->  http://localhost:8000/docs
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: risk
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-risk-dev-password}
+      POSTGRES_DB: risk_predictor
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U risk -d risk_predictor"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://risk:${POSTGRES_PASSWORD:-risk-dev-password}@db:5432/risk_predictor
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env (python -c "import secrets; print(secrets.token_urlsafe(48))")}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      DASHBOARD_URL: ${DASHBOARD_URL:-http://localhost:5173}
+      RISK_USE_HF: ${RISK_USE_HF:-1}
+      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET:-}
+      GITHUB_APP_ID: ${GITHUB_APP_ID:-}
+      GITHUB_PRIVATE_KEY: ${GITHUB_PRIVATE_KEY:-}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+    ports:
+      - "8000:8000"
+    volumes:
+      - riskdata:/data   # clones, caches, emotion model
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  riskdata:
