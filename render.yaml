@@ -1,18 +1,16 @@
-# Render Blueprint: Dashboard -> New -> Blueprint -> pick this GitHub repo.
-# Creates ONE web service (React dashboard + API in the same Docker image, one URL) and a
-# PostgreSQL database, and wires DATABASE_URL automatically. Step-by-step: docs/DEPLOYMENT.md.
+# Render Blueprint: Dashboard -> New -> Blueprint -> pick this repo.
+# Creates the API (Docker) + a PostgreSQL database and wires DATABASE_URL automatically.
 # Plan names/prices change - check render.com/pricing before applying.
 services:
   - type: web
-    name: code-risk-predictor
+    name: code-risk-api
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    # PyTorch + the emotion model need ~1.5-2 GB RAM ("standard").
-    # Cheaper: plan "starter" (512 MB) with RISK_USE_HF=0 below.
+    # PyTorch + the emotion model need ~1.5-2 GB RAM. On a 512 MB plan set RISK_USE_HF=0.
     plan: standard
     healthCheckPath: /api/health
-    disk:                      # keeps clones/caches between deploys (needs a paid plan)
+    disk:                      # persistent clones/caches (needs a paid plan)
       name: risk-data
       mountPath: /data
       sizeGB: 10
@@ -22,16 +20,15 @@ services:
           name: code-risk-db
           property: connectionString
       - key: SECRET_KEY
-        generateValue: true    # Render creates a long random value
+        generateValue: true    # Render creates a random value
       - key: ENVIRONMENT
         value: production
-      - key: RISK_USE_HF       # "0" on a 512 MB plan: skips the AI emotion model
+      - key: RISK_USE_HF
         value: "1"
-      # The dashboard link in PR comments defaults to Render's own URL (RENDER_EXTERNAL_URL);
-      # set DASHBOARD_URL only if you use a custom domain.
+      - key: CORS_ORIGINS      # your frontend URL, e.g. https://code-risk.onrender.com
+        sync: false
       - key: DASHBOARD_URL
         sync: false
-      # GitHub App (optional, for automatic PR comments) - see README "GitHub App".
       - key: GITHUB_WEBHOOK_SECRET
         sync: false
       - key: GITHUB_APP_ID

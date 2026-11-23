@@ -1,6 +1,6 @@
 # Local production-like setup: API + PostgreSQL.
 #   copy .env.example to .env, fill in SECRET_KEY, then:
-#   docker compose up --build        ->  http://localhost:8000  (dashboard; API docs at /docs)
+#   docker compose up --build        ->  http://localhost:8000/docs
 services:
   db:
     image: postgres:17-alpine

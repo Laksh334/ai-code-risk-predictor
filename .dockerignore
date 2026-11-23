@@ -5,9 +5,6 @@ venv
 **/*.pyc
 **/.env
 backend/*.db
-# rebuilt inside the image (and Windows node_modules binaries don't work on Linux)
-frontend/node_modules
-frontend/dist
 # all generated data except the production model
 data/*
 !data/models/
