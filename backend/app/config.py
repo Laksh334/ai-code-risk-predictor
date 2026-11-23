@@ -1,3 +1,5 @@
+import os
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -39,7 +41,19 @@ class Settings(BaseSettings):
     github_api_url: str = "https://api.github.com"
     dashboard_url: str = "http://localhost:5173"  # linked from PR comments
 
+    # --- Deployment (E1) ---
+    # Folder with the built React app (frontend/dist). When set, this server also serves the
+    # dashboard: one service, one URL. The Docker image sets it.
+    frontend_dist: str = ""
+
     model_config = SettingsConfigDict(env_file=".env")
+
+    def model_post_init(self, __context) -> None:
+        # Render tells every service its public URL; use it as the dashboard link for PR comments
+        # when nothing else was configured (the frontend is served from this same URL).
+        render_url = os.environ.get("RENDER_EXTERNAL_URL")
+        if render_url and self.dashboard_url == "http://localhost:5173":
+            self.dashboard_url = render_url.rstrip("/")
 
     @property
     def cors_origin_list(self) -> list[str]:

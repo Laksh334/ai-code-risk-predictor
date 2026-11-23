@@ -478,4 +478,15 @@ duplicate repo, a missing repo failing with a clear reason, and cancel/confirm d
 - [x] D6 — Polish: loading/error states, responsive layout
 
 **Phase E — Ship**
-- [ ] E1 — Deploy, architecture docs, demo script for the presentation
+- [x] E1 — Deploy, architecture docs, demo script for the presentation
+  (deploy-ready: one Docker image serves dashboard + API; Render blueprint. The actual Docker build
+  and Render deploy still need Docker Desktop / a Render account — see `docs/DEPLOYMENT.md`)
+
+## Documentation
+
+| Document | For |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | system, components, scan and PR flows, data model, deployment (diagrams) |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | run locally, Docker Compose, Render, environment variables |
+| [docs/DEMO.md](docs/DEMO.md) | 10-minute demo script for the faculty presentation |
+| [docs/Team_Study_Guide.md](docs/Team_Study_Guide.md) | each member's part, full technical A–Z, viva questions |

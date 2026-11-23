@@ -2,9 +2,12 @@ import logging
 import uuid
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import auth, github, health, repositories, scans
 from app.config import settings
@@ -67,6 +70,23 @@ app.include_router(scans.router, prefix="/api")
 app.include_router(github.router, prefix="/api")
 
 
-@app.get("/")
-def root() -> dict:
-    return {"message": f"{settings.app_name} is running. See /docs for the API."}
+FRONTEND = Path(settings.frontend_dist) if settings.frontend_dist else None
+
+if FRONTEND and (FRONTEND / "index.html").is_file():
+    # Production: the built React app (frontend/dist) is served by this same server, so the whole
+    # product is ONE service on ONE URL (no CORS, one deploy). /api/* and /docs stay the API.
+    app.mount("/assets", StaticFiles(directory=FRONTEND / "assets"), name="assets")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def spa(path: str) -> FileResponse:
+        if path.startswith(("api/", "docs", "redoc", "openapi.json")):
+            raise HTTPException(404)  # unknown API route: a JSON 404, not the web page
+        file = (FRONTEND / path).resolve()
+        if path and file.is_file() and FRONTEND.resolve() in file.parents:
+            return FileResponse(file)  # favicon, robots.txt, ...
+        # Any other path (/repos/1, /login, ...) is a page of the React app: let its router decide.
+        return FileResponse(FRONTEND / "index.html", headers={"Cache-Control": "no-cache"})
+else:
+    @app.get("/")
+    def root() -> dict:
+        return {"message": f"{settings.app_name} is running. See /docs for the API."}
